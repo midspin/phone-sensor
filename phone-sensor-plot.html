@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Phone Sensor Graph</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #0e0e0e;
+  color: #fff;
+  text-align: center;
+  margin: 0;
+  padding: 10px;
+}
+button {
+  padding: 12px 20px;
+  font-size: 16px;
+  margin: 10px;
+  cursor: pointer;
+}
+canvas {
+  background: #111;
+  border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📱 Phone Motion Sensor Graph</h2>
+
+<button onclick="startSensors()">Start Sensors</button>
+
+<canvas id="chart" width="400" height="250"></canvas>
+
+<script>
+let labels = [];
+let ax = [], ay = [], az = [];
+
+const maxPoints = 100;
+
+const ctx = document.getElementById('chart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: labels,
+    datasets: [
+      { label: 'Accel X', data: ax, borderColor: 'red', fill: false },
+      { label: 'Accel Y', data: ay, borderColor: 'green', fill: false },
+      { label: 'Accel Z', data: az, borderColor: 'blue', fill: false }
+    ]
+  },
+  options: {
+    responsive: true,
+    animation: false,
+    scales: {
+      y: { suggestedMin: -20, suggestedMax: 20 }
+    }
+  }
+});
+
+function addData(x, y, z) {
+  if (labels.length > maxPoints) {
+    labels.shift();
+    ax.shift(); ay.shift(); az.shift();
+  }
+  labels.push('');
+  ax.push(x);
+  ay.push(y);
+  az.push(z);
+  chart.update();
+}
+
+function startSensors() {
+  if (typeof DeviceMotionEvent?.requestPermission === 'function') {
+    DeviceMotionEvent.requestPermission().then(response => {
+      if (response === 'granted') {
+        enableMotion();
+      }
+    });
+  } else {
+    enableMotion();
+  }
+}
+
+function enableMotion() {
+  window.addEventListener('devicemotion', e => {
+    if (!e.accelerationIncludingGravity) return;
+    addData(
+      e.accelerationIncludingGravity.x || 0,
+      e.accelerationIncludingGravity.y || 0,
+      e.accelerationIncludingGravity.z || 0
+    );
+  });
+}
+
+function enableMotion() {
+
+  window.addEventListener('devicemotion', (event) => {
+
+    let acc = event.accelerationIncludingGravity;
+    if (!acc) return;
+
+    let x = acc.x || 0;
+    let y = acc.y || 0;
+    let z = acc.z || 0;
+
+    addData(x, y, z);
+  });
+
+}
+</script>
+
+</body>
+</html>
